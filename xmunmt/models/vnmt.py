@@ -302,7 +302,7 @@ def model_graph(features, labels, params):
         divergence = 0.5 * divergence / batch_size
     else:
         h_z = h_z_prior
-        divergence = 0
+        divergence = 0.0
 
     # [batch_size, params.e_prime_size]
     h_e_prime = tf.tanh(layers.nn.linear(h_z, output_size=params.e_prime_size, bias=True, scope="h_e_prime"))
