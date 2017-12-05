@@ -63,7 +63,7 @@ def batch_examples(example, batch_size, max_length, mantissa_bits,
         max_length = max_length if drop_long_sequences else 10 ** 9
 
         # The queue to bucket on will be chosen based on maximum length = max {src_len, tgt_len}
-        max_example_length = tf.maximum(tf.shape(example["source_length"])[0], tf.shape(example["target_length"])[0])
+        max_example_length = tf.maximum(example["source_length"][0], example["target_length"][0])
 
         (_, outputs) = tf.contrib.training.bucket_by_sequence_length(
             max_example_length,
