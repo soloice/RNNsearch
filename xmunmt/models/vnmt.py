@@ -91,8 +91,8 @@ def _encoder(cell_fw, cell_bw, inputs, sequence_length, dtype=None,
 
         results = {
             "annotation": annotation,
-            "average": tf.reduce_sum(annotation, axis=1, keep_dims=False) /
-                       tf.reshape(sequence_length, shape=[tf.shape(inputs)[0], 1]), # [batch_size, hidden_size*2]
+            "average": tf.reduce_sum(annotation, axis=1, keep_dims=False) / # [batch_size, hidden_size*2]
+                       tf.reshape(tf.cast(sequence_length, tf.float32), shape=[tf.shape(inputs)[0], 1]),
             "outputs": {
                 "forward": output_fw,
                 "backward": output_bw
