@@ -300,10 +300,9 @@ def model_graph(features, labels, params):
         # KL(posterior || prior):
 
         divergence = 0.5 * (tf.reduce_sum(prior_dist["log_sigma2"]) - tf.reduce_sum(posterior_dist["log_sigma2"])) \
-                     + tf.cast(batch_size * params.e_prime_size, tf.float32) \
                      + tf.reduce_sum(sigma_posterior / sigma_prior) \
                      + tf.reduce_sum(tf.square(prior_dist["mu"] - posterior_dist["mu"]) / sigma_prior)
-        divergence = 0.5 * divergence / tf.cast(batch_size, tf.float32)
+        divergence = 0.5 * (divergence / tf.cast(batch_size, tf.float32) - tf.cast(params.e_prime_size, tf.float32))
     else:
         h_z = h_z_prior
         divergence = 0.0
