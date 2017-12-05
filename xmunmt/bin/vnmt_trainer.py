@@ -300,12 +300,17 @@ def main(args):
         model = model_cls(params)
 
         # Multi-GPU setting
-        sharded_losses = parallel.parallel_model(
+        results = parallel.parallel_model(
             model.get_training_func(initializer),
             features,
             params.device_list
         )
-        loss = tf.add_n(sharded_losses) / len(sharded_losses)
+        if isinstance(results, tuple):
+            sharded_losses, sharded_divergence = results
+            loss = tf.add_n(sharded_losses) / len(sharded_losses)
+            divergence = tf.add_n(sharded_divergence) / len(sharded_divergence)
+        else:
+            loss, divergence = results[0]
 
         # Create global step
         global_step = tf.train.get_or_create_global_step()
@@ -358,6 +363,7 @@ def main(args):
                 {
                     "step": global_step,
                     "loss": loss,
+                    "KL": divergence,
                     "source": tf.shape(features["source"]),
                     "target": tf.shape(features["target"])
                 },

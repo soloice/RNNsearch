@@ -399,7 +399,7 @@ def model_graph(features, labels, params):
     )
     loss = tf.reduce_sum(ce * tgt_mask) / tf.reduce_sum(tgt_mask) + divergence
 
-    return loss
+    return loss, divergence
 
 
 class VNMT(NMTModel):
