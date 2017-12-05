@@ -126,7 +126,8 @@ def get_training_input(filenames, params):
                 "source": src,
                 "target": tgt,
                 "source_length": tf.shape(src),
-                "target_length": tf.shape(tgt)
+                "target_length": tf.shape(tgt),
+                "normal_noise": tf.random_normal([params.batch_size, params.hidden_size])
             },
             num_parallel_calls=params.num_threads
         )

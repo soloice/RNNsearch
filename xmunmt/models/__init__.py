@@ -4,6 +4,7 @@
 # Contact: playinf@stu.xmu.edu.cn
 
 import xmunmt.models.rnnsearch
+import xmunmt.models.vnmt
 
 
 def get_model(name):
@@ -11,5 +12,7 @@ def get_model(name):
 
     if name == "rnnsearch":
         return xmunmt.models.rnnsearch.RNNsearch
+    if name == "vnmt":
+        return xmunmt.models.vnmt.VNMT
     else:
         raise LookupError("Unknown model %s" % name)
