@@ -12,7 +12,7 @@ def get_model(name):
 
     if name == "rnnsearch":
         return xmunmt.models.rnnsearch.RNNsearch
-    if name == "vnmt":
+    elif name == "vnmt":
         return xmunmt.models.vnmt.VNMT
     else:
         raise LookupError("Unknown model %s" % name)
