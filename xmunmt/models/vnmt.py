@@ -1,6 +1,6 @@
 # coding=utf-8
-# Author: Chong Ruan
-# Contact: ruanchong_ruby@163.com
+# Author: Zhixing Tan, Chong Ruan
+# Contact: playinf@stu.xmu.edu.cn, pkurc@pku.edu.cn
 
 from __future__ import absolute_import
 from __future__ import division
