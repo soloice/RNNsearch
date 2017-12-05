@@ -62,12 +62,8 @@ def batch_examples(example, batch_size, max_length, mantissa_bits,
         boundaries = [boundary * length_multiplier for boundary in boundaries]
         max_length = max_length if drop_long_sequences else 10 ** 9
 
-        # The queue to bucket on will be chosen based on maximum length
-        max_example_length = 0
-        for v in example.values():
-            if v.shape.ndims > 0:
-                seq_length = tf.shape(v)[0]
-                max_example_length = tf.maximum(max_example_length, seq_length)
+        # The queue to bucket on will be chosen based on maximum length = max {src_len, tgt_len}
+        max_example_length = tf.maximum(tf.shape(example["source_length"])[0], tf.shape(example["target_length"])[0])
 
         (_, outputs) = tf.contrib.training.bucket_by_sequence_length(
             max_example_length,
@@ -127,7 +123,7 @@ def get_training_input(filenames, params):
                 "target": tgt,
                 "source_length": tf.shape(src),
                 "target_length": tf.shape(tgt),
-                "normal_noise": tf.random_normal([params.batch_size, params.hidden_size])
+                "normal_noise": tf.random_normal([params.hidden_size * 2])
             },
             num_parallel_calls=params.num_threads
         )

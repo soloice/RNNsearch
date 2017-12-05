@@ -67,9 +67,9 @@ def _gru_encoder(cell, inputs, sequence_length, initial_state, dtype=None):
 
 
 def _encoder(cell_fw, cell_bw, inputs, sequence_length, dtype=None,
-             scope=None):
+             scope=None, reuse=None):
     with tf.variable_scope(scope or "encoder",
-                           values=[inputs, sequence_length]):
+                           values=[inputs, sequence_length], reuse=reuse):
         inputs_fw = inputs
         inputs_bw = tf.reverse_sequence(inputs, sequence_length,
                                         batch_axis=0, seq_axis=1)
@@ -114,9 +114,10 @@ def _inferer(encoder_hs, d_z, dtype=None, scope=None):
 
     # Returns: a dictionary with key "mu" and "log_sigma2", which are Gaussian means and log variances
     #           and both are of shape [batch_size, d_z]
-    h_z_prime = tf.tanh(layers.nn.linear(encoder_hs, d_z, bias=True, scope=scope))
-    mu = layers.nn.linear(h_z_prime, d_z, bias=True, scope=scope + "h_z_prime2mu")
-    log_sigma2 = layers.nn.linear(h_z_prime, d_z, bias=True, scope=scope + "h_z_prime2log_sigma2")
+    with tf.variable_scope(scope or "inferer"):
+        h_z_prime = tf.tanh(layers.nn.linear(encoder_hs, d_z, bias=True, scope="h_z_prime"))
+        mu = layers.nn.linear(h_z_prime, d_z, bias=True, scope="mu")
+        log_sigma2 = layers.nn.linear(h_z_prime, d_z, bias=True, scope="log_sigma2")
     return {"mu": mu, "log_sigma2":log_sigma2}
 
 
@@ -276,7 +277,7 @@ def model_graph(features, labels, params):
     if params.enable_KL:
         # Sample h_z from posterior distribution and calculate KL divergence
         encoder_output_tgt = _encoder(cell_fw, cell_bw, tgt_inputs,
-                                      features["target_length"])
+                                      features["target_length"], reuse=True)
         posterior_dist = _inferer([encoder_output["average"], encoder_output_tgt["average"]],
                                   d_z=params.z_size, dtype=None, scope="posterior_distribution")
         # `sigma_posterior` corresponds to covariance of posterior distribution q(z|x, y), i.e.: \sigma in paper
@@ -294,12 +295,15 @@ def model_graph(features, labels, params):
         #   KL(P1 || P2) = 1/2 * { log {\prod \sigma2 / \prod \sigma1} - d +
         #                               \sum_i {\sigma1 / \sigma2} + \sum{\sigma2^{-1} * (\mu2 - \mu1)^2} }
 
+        print("sigma prior: ", sigma_prior)
+        print("posterior mu: ", posterior_dist["mu"])
         # KL(posterior || prior):
+
         divergence = 0.5 * (tf.reduce_sum(prior_dist["log_sigma2"]) - tf.reduce_sum(posterior_dist["log_sigma2"])) \
-                     + batch_size * params.e_prime_size \
+                     + tf.cast(batch_size * params.e_prime_size, tf.float32) \
                      + tf.reduce_sum(sigma_posterior / sigma_prior) \
                      + tf.reduce_sum(tf.square(prior_dist["mu"] - posterior_dist["mu"]) / sigma_prior)
-        divergence = 0.5 * divergence / batch_size
+        divergence = 0.5 * divergence / tf.cast(batch_size, tf.float32)
     else:
         h_z = h_z_prior
         divergence = 0.0
@@ -478,7 +482,7 @@ class VNMT(NMTModel):
             label_smoothing=0.1,
             constant_batch_size=True,
             batch_size=128,
-            max_length=60,
+            max_length=80,
             clip_grad_norm=5.0,
             z_size=2000,
             e_prime_size=2000,
